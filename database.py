@@ -107,8 +107,6 @@ def db_delete_user(user_id):
 
 #flashcard_set Methods
 def db_get_set(set_id):
-    if not "error" in set_id:
-        print("FFDFNKS", set_id) 
         myquery = { "_id": ObjectId(set_id) }
         foundSets = sets.find(myquery)
         set = None if foundSets.explain()['executionStats']['nReturned'] <= 0 else foundSets[0]
@@ -125,8 +123,6 @@ def db_get_set(set_id):
                 "error": "No set found."
             }
         return set_data
-    else:
-        return {"error": "Set_ID invalid."}
 
     
 
@@ -151,34 +147,25 @@ def db_create_set(user_email, set_name, description, cards):
         "cards": cards
     }
     user = db_get_user(user_email)
-    if not "error" in user:
-        newuser = user
-        set_id = sets.insert(new_set)
-        newuser_sets = user["flashcard_sets"]
-        newuser_sets.append(set_id)
-        newuser["flashcard_sets"] = newuser_sets
-        db_update_user(user_email, newuser)
-        return set_id 
-    else:
-        return {"error": "Could not make set."} 
+    newuser = user
+    set_id = sets.insert(new_set)
+    newuser_sets = user["flashcard_sets"]
+    newuser_sets.append(set_id)
+    newuser["flashcard_sets"] = newuser_sets
+    db_update_user(user_email, newuser)
+    return set_id 
 
 def db_update_set_field(set_id, field, newValue):
-    if not "error" in set_id:
-        query = {"_id": ObjectId(set_id)}
-        setUpdated = sets.update(query, {"$set": {field: newValue}})
-        data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
-        return data
-    else:
-        return {"error": "Set_id invalid in updating set"}
+    query = {"_id": ObjectId(set_id)}
+    setUpdated = sets.update(query, {"$set": {field: newValue}})
+    data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
+    return data
 
 def db_update_set(set_id, newSet):
-    if not "error" in set_id:
-        query = {"_id": ObjectId(set_id)}
-        setUpdated = sets.update(query, {"$set": newSet})
-        data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
-        return data
-    else:
-        return {"error": "Set_id invalid in updating set"}
+    query = {"_id": ObjectId(set_id)}
+    setUpdated = sets.update(query, {"$set": newSet})
+    data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
+    return data
 
 
 def db_delete_set(user_id, set_id):
@@ -229,10 +216,6 @@ def db_get_flashcard(flashcard_id):
         flashcard_data = flashcard 
         del flashcard_data['set_id'] 
         del flashcard_data['_id']
-    else:
-        flashcard_data = {
-            "error": "No flashcard found."
-        }
     return flashcard_data
 
 def db_get_flashcards_of_set(set_id):
@@ -256,14 +239,11 @@ def db_create_flashcard(set_id, front, back):
         "back": back,
         "learning_history": superMem.json()
     }
-    if not "error" in set_id:
-        flashcard_id = flashcards.insert(new_flashcard)
-        set_cards = db_get_set(set_id)['cards']
-        set_cards.append(flashcard_id)
-        db_update_set_field(set_id, "cards", set_cards)
-        return flashcard_id
-    else:
-        return {"error": "Could not create flashcard."}
+    flashcard_id = flashcards.insert(new_flashcard)
+    set_cards = db_get_set(set_id)['cards']
+    set_cards.append(flashcard_id)
+    db_update_set_field(set_id, "cards", set_cards)
+    return flashcard_id
 
 def db_update_flashcard_field(flashcard_id, field, newValue):
     query = {"_id": ObjectId(flashcard_id)}
@@ -304,14 +284,26 @@ def db_delete_all_flashcards(set_id):
 def db_study_flashcard(flashcard_id, time, correct):
     # get current learning history (if any)
     flashcard_from_db = db_get_flashcard(flashcard_id)
-    if "error" in flashcard_from_db:
-        return {"error": "No flashcard found."}
-    else:
-        learning_history = flashcard_from_db["learning_history"]
-        new_flashcard = flashcard(learning_history)
-        new_flashcard.updateReviewDate(time, correct)
-        db_update_flashcard_field(flashcard_id, "learning_history", new_flashcard.learning_history)
-        return new_flashcard.learning_history
+    learning_history = flashcard_from_db["learning_history"]
+    new_flashcard = flashcard(learning_history)
+    new_flashcard.updateReviewDate(time, correct)
+    db_update_flashcard_field(flashcard_id, "learning_history", new_flashcard.learning_history)
+    return new_flashcard.learning_history
+
+def db_get_cards_to_study_today(set_id):
+    set_from_db = db_get_set(set_id)
+    cards = set_from_db["cards"]
+    cards_to_do = []
+    for card in cards:
+        curr_card = json.loads(card["learning_history"])
+        print(curr_card["review_date"])
+        correct_date = date.fromisoformat(curr_card["review_date"])
+        if(correct_date <= date.today()):
+            cards_to_do.append(card)
+    # cards_to_do = [card for card in cards if card["learning-history"]["review_date"] >= datetime.datetime(2020, 5, 17)]
+    return cards_to_do
+
+
 
     # take data -> create Flashcard (using flashcard class)
     # get next_review_day from flashcard.get_next_review_day()

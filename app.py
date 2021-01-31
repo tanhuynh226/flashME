@@ -132,7 +132,7 @@ No other info is needed, besides the user_id and set_id!
 Also, changing delete route to method: 'DELETE'
 '''
 @app.route('/api/set/delete/me/<set_id>', methods=['DELETE'])
-def delete_set(user_id, set_id):
+def delete_set(set_id):
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
@@ -146,7 +146,7 @@ def delete_set(user_id, set_id):
 # POST /api/sets/update/<userid>
 # Update a set with that ID
 @app.route('/api/set/update/me/<set_id>', methods=['POST'])
-def update_set(user_id, set_id):
+def update_set(set_id):
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
@@ -154,7 +154,7 @@ def update_set(user_id, set_id):
     set = db_update_set(set_id, json)
     if "error" in set:
         abort(404, description=set["error"])
-    db_update_set(user_id, json.name, json.description, json.cards)
+    db_update_set(email, json.name, json.description, json.cards)
 
 
 # == FLASHCARDS ==
@@ -236,24 +236,24 @@ def update_flashcard(set_id, flashcard_id):
     "repetitions": 5, "review_date": "2021-03-05"}
 '''
 # Calculations after user inputs correct or wrong
-@app.route('/api/flashcard/study/<set_id>/<flashcard_id>', methods=['POST'])
+@app.route('/api/flashcard/study/<flashcard_id>', methods=['POST'])
 def study_flashcard(flashcard_id, time, correct):
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
-    db_study_flashcard(flashcard_id, time, correct)
+    learning_history = db_study_flashcard(flashcard_id, time, correct)
     # Perform calculations to calculate the next review day for this specific flashcard_id
-    pass
+    return learning_history
 
 # All the flashcards that need to be studied today
 @app.route('/api/flashcard/today/<set_id>', methods=['POST'])
-def today_flashcard(flashcard_id):
+def today_flashcard(set_id):
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
     # return array of cards that need to be studied today
-    pass
-
+    return db_get_cards_to_study_today(set_id)
+    
 # Delete all flashcards within a set
 @app.route('/api/flashcard/delete/<set_id>', methods=['DELETE'])
 def delete_all_flashcards(set_id):
