@@ -45,8 +45,6 @@ def db_get_user(user_id):
     user_data = {}
     if not user == None:
         user_data = user
-        print(user_id)
-        print("HIT HERE:", db_get_sets_of_user(user_id))
         user_data['flashcard_sets'] = db_get_sets_of_user(user_id)
     else:
         user_data = {
@@ -82,20 +80,18 @@ For users, sets, and cards, there's both a update_field and update_{object} (ex:
 '''
 
 def db_update_user_field(user_id, field, newValue):
-    print(user_id)
-    query = {"_id": user_id}
-    print(field, newValue)
-    userUpdated = users.update(query, {"$set": {field: newValue}})
-    data = {"error": f"User {user_id} wasn't updated"} if userUpdated['nModified'] <= 0 else {"success": f"User {user_id} was updated"}
-    print(data)
-    print(db_get_user(user_id))
-    return data
+    if not "error" in user_id: d
+        query = {"_id": user_id}
+        userUpdated = users.update(query, {"$set": {field: newValue}})
+        data = {"error": f"User {user_id} wasn't updated"} if userUpdated['nModified'] <= 0 else {"success": f"User {user_id} was updated"}
+        return data
+    else:
+        return {"error": "User "+ user_id + " could not be updated."}
 
 def db_update_user(user_id, newUser):
     query = {"_id": user_id}
     userUpdated = users.update(query, {"$set": newUser})
-    if(userUpdated['nModified'] > 0):
-        print(user_id + "has been updated with", newUser)
+    if(userUpdated['nModified'] > 0): 
         return {"success": "User " + user_id + " has been updated"}
     else:
         return {"error": "User "+ user_id + " could not be updated."}

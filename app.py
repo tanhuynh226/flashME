@@ -43,7 +43,8 @@ def create_user():
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
-    else:
+    json = request.json
+    db_create_user(json.username, json.bio, json.flashcards, email)
 
     # find that user in the database
     # send that data back to the web browser (client)
@@ -52,14 +53,14 @@ def create_user():
 # POST /api/user/update/<userid>
 # Update a user with their ID
 @app.route('/api/user/update/me', methods=['POST'])
-def update_user(user_id):
+def update_user(email):
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
     json = request.json
     # get the user id from the URL
     print(request.json)
-    user = db_update_user(user_id, json)
+    user = db_update_user(email, json)
     if "error" in user:
         abort(404, description=user["error"])
     else:
@@ -70,11 +71,11 @@ def update_user(user_id):
 # POST /api/user/delete/<userid>
 # Update a user with their ID
 @app.route('/api/user/delete/me', methods=['POST'])
-def delete_user(user_id):
+def delete_user():
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
-    user = db_delete_user(user_id)
+    user = db_delete_user(email)
     if "error" in user:
         abort(404, description=user["error"])
     else:
