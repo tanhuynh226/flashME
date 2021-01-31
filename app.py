@@ -24,7 +24,7 @@ def get_user(user_id):
 def user_sets(user_id):
     user = db_user_sets(user_id)
     if not user:
-        abort(404
+        abort(404)
     else:
         return jsonify([db_get_set(set_id) for set_id in user.sets])
 
@@ -49,7 +49,7 @@ def update_user():
 # POST /api/user/delete/<userid>
 # Update a user with their ID
 @app.route('/api/user/delete/<user_id>', methods=['POST'])
-def delete_user():
+def delete_user(user_id):
     user = db_delete_user(user_id)
     if not user:
         abort(404)
