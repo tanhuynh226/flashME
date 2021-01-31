@@ -4,6 +4,7 @@ from flask.helpers import send_from_directory
 from flask_dance.contrib.google import make_google_blueprint, google
 from database import *
 import requests
+import secret
 # from flask_login import logout_user
 import json
 
@@ -12,50 +13,83 @@ app = Flask(__name__) #Change name
 # == USER ==
 # GET /api/user/get/<userid>
 # Gets a user by their ID
-@app.route('/api/user/get/<user_id>', methods=['GET'])
+@app.route('/api/user/get/me', methods=['GET'])
 def get_user(user_id):
+    email = google_oauth2_validate(request.headers['authorization'])
+    if not email:
+        abort(401, description="Token could not be linked to any email.")
     user = db_get_user(user_id)
-    print(user_id)
-    if not user:
-        print("HIT")
+    print(user)
+    if "error" in user:
+        abort(404, description=user["error"])
     else:
-        return jsonify(user)
+        return json.dumps(user)
 
 # GET /api/user/sets/<userid>
 # Gets all sets that a user has, and their data
-@app.route('/api/user/sets/<user_id>', methods=['GET'])
-def user_sets(user_id):
-    user = db_get_set(user_id) 
-    if not user:
-        abort(404)
-    else:
-        return jsonify([db_get_set(set_id) for set_id in user.sets])
+@app.route('/api/user/sets/me', methods=['GET'])
+def get_all_sets(user_id):
+    email = google_oauth2_validate(request.headers['authorization'])
+    if not email:
+        abort(401, description="Token could not be linked to any email.")
+    sets = db_get_sets_of_user(user_id)
+    return json.dumps(sets)
 
 # POST /api/user/create/<userid>
 # Create a user with their ID
 
-@app.route('/api/user/create/<user_id>', methods=['POST'])
+@app.route('/api/user/create/me', methods=['POST'])
 def create_user(user_id):
+    email = google_oauth2_validate(request.headers['authorization'])
+    if not email:
+        abort(401, description="Token could not be linked to any email.")
     pass
     # find that user in the database
     # send that data back to the web browser (client)
+
+'''
+
+POST REQUEST --> UPDATE USER
+INFO NEEDED:
+type: dict or {} (in response body)?
+{
+    "user_name": new_username,
+    "user_bio": new_username_bio,
+    "flashcard_sets": new_sets,
+    "user_email": new_user_email,
+}
+
+'''
+
 
 # POST /api/user/update/<userid>
 # Update a user with their ID
-@app.route('/api/user/update/<user_id>', methods=['POST'])
-def update_user():
+@app.route('/api/user/update/me', methods=['POST'])
+def update_user(user_id):
+    email = google_oauth2_validate(request.headers['authorization'])
+    if not email:
+        abort(401, description="Token could not be linked to any email.")
+    json = request.json
     # get the user id from the URL
+    print(request.json)
+    user = db_update_user(user_id, json)
+    if "error" in user:
+        abort(404, description=user["error"])
+    else:
+        return user
     # find that user in the database
     # send that data back to the web browser (client)
-    pass
 
 # POST /api/user/delete/<userid>
 # Update a user with their ID
-@app.route('/api/user/delete/<user_id>', methods=['POST'])
+@app.route('/api/user/delete/me', methods=['POST'])
 def delete_user(user_id):
+    email = google_oauth2_validate(request.headers['authorization'])
+    if not email:
+        abort(401, description="Token could not be linked to any email.")
     user = db_delete_user(user_id)
-    if not user:
-        abort(404)
+    if "error" in user:
+        abort(404, description=user["error"])
     else:
         return user
 
@@ -65,9 +99,13 @@ def delete_user(user_id):
 # Gets a set by its ID
 @app.route('/api/sets/get/<set_id>', methods=['GET'])
 def get_set(set_id):
+    email = google_oauth2_validate(request.headers['authorization'])
+    if not email:
+        abort(401, description="Token could not be linked to any email.")
     set = db_get_set(set_id)
-    if not set:
-        abort(404)
+    print(set)
+    if "error" in set:
+        abort(404, description=set["error"])
     else:
         return jsonify(set)
 
@@ -90,38 +128,45 @@ request.json (this is of type Dict)
 }
 '''
 
-# POST /api/sets/create/<user_id>
+# POST /api/sets/create/me
 # Create a set with that ID (it will have all the cards)
-@app.route('/api/set/create/<user_id>', methods=['POST'])
+@app.route('/api/set/create/me', methods=['POST'])
 def create_set(user_id):
-    json = request.json
-    token = request.headers['authorization']
-    email = google_oauth2_validate(token)
+    email = google_oauth2_validate(request.headers['authorization'])
     if not email:
-        abort(401)
+        abort(401, description="Token could not be linked to any email.")
+    json = request.json
     db_create_set(user_id, json.name, json.description, json.cards)
 
 # POST /api/sets/delete/<setid>
 # Create a set with that ID (it will have all the cards)
-@app.route('/api/set/delete/<user_id>/<set_id>', methods=['POST'])
+'''
+No other info is needed, besides the user_id and set_id!
+Also, changing delete route to method: 'DELETE'
+'''
+@app.route('/api/set/delete/me/<set_id>', methods=['DELETE'])
 def delete_set(user_id, set_id):
-    json = request.json
-    token = request.headers['authorization']
-    email = google_oauth2_validate(token)
+    email = google_oauth2_validate(request.headers['authorization'])
     if not email:
-        abort(401)
+        abort(401, description="Token could not be linked to any email.")
+    json = request.json
+    set = db_delete_set(user_id, set_id)
+    if "error" in set:
+        abort(404, description=set["error"])
     db_delete_set(set_id)
 
 
 # POST /api/sets/update/<userid>
 # Update a set with that ID
-@app.route('/api/set/update/<user_id>/<set_id>', methods=['POST'])
+@app.route('/api/set/update/me/<set_id>', methods=['POST'])
 def update_set(user_id, set_id):
-    json = request.json
-    token = request.headers['authorization']
-    email = google_oauth2_validate(token)
+    email = google_oauth2_validate(request.headers['authorization'])
     if not email:
-        abort(401)
+        abort(401, description="Token could not be linked to any email.")
+    json = request.json
+    set = db_update_set(set_id, json)
+    if "error" in set:
+        abort(404, description=set["error"])
     db_update_set(user_id, json.name, json.description, json.cards)
 
 
@@ -129,13 +174,13 @@ def update_set(user_id, set_id):
 # GET /api/flashcard/get/<flashcardid>
 @app.route('/api/flashcard/get/<flashcard_id>', methods=['GET'])
 def get_flashcard(flashcard_id):
-    flashcard = db_get_flashcard(flashcard_id)
-    token = request.headers['authorization']
-    email = google_oauth2_validate(token)
+    email = google_oauth2_validate(request.headers['authorization'])
     if not email:
-        abort(401)
-    if not flashcard:
-        abort(404)
+        abort(401, description="Token could not be linked to any email.")
+    print(flashcard_id)
+    flashcard = db_get_flashcard(flashcard_id)
+    if "error" in flashcard:
+        abort(404, description=flashcard["error"])
     else:
         return jsonify(flashcard)
 
@@ -147,53 +192,71 @@ def get_flashcard(flashcard_id):
 # POST /api/flashcard/create/<flashcardid>
 @app.route('/api/flashcard/create/<set_id>', methods=['POST'])
 def create_flashcard(set_id):
-    json = request.json
-    token = request.headers['authorization']
-    email = google_oauth2_validate(token)
+    email = google_oauth2_validate(request.headers['authorization'])
     if not email:
-        abort(401)
+        abort(401, description="Token could not be linked to any email.")
+    json = request.json
     db_create_flashcard(set_id, json.front, json.back)
 # Create a flashcard with an ID
 
 # POST /api/flashcard/delete/<flashcardid>
-@app.route('/api/flashcard/delete/<set_id>/<flashcard_id>', methods=['POST'])
+@app.route('/api/flashcard/delete/<set_id>/<flashcard_id>', methods=['DELETE'])
 def delete_flashcard(set_id, flashcard_id):
-    json = request.json
-    token = request.headers['authorization']
-    email = google_oauth2_validate(token)
+    email = google_oauth2_validate(request.headers['authorization'])
     if not email:
-        abort(401)
+        abort(401, description="Token could not be linked to any email.")
+    json = request.json
+    flashcard = db_get_flashcard(flashcard_id)
+    if "error" in flashcard:
+        abort(404, description=flashcard["error"])
     db_delete_flashcard(set_id, flashcard_id)
     pass
 
-# Create a flashcard with an ID
+# Update flashcard (review dates, quality, flashcard_id)
 # POST /api/flashcard/update/<flashcardid>
 @app.route('/api/flashcard/update/<set_id>/<flashcard_id>', methods=['POST'])
 def update_flashcard(set_id, flashcard_id):
-    json = request.json
-    token = request.headers['authorization']
-    email = google_oauth2_validate(token)
+    email = google_oauth2_validate(request.headers['authorization'])
     if not email:
-        abort(401)
+        abort(401, description="Token could not be linked to any email.")
+    json = request.json
+    flashcard = db_get_flashcard(flashcard_id)
+    if "error" in flashcard:
+        abort(404, description=flashcard["error"])
     db_update_flashcard(set_id, flashcard_id)
     pass
-# Update a flashcard with an ID
 
 # POST /api/flashcard/<studyid>
 # Update a flashcard with the study results
 
 # Calculations after user inputs correct or wrong
-@app.route('/api/flashcard/delete/<flashcard_id>/<set_id>', methods=['POST'])
-def study_flashcard(flashcard_id):
+@app.route('/api/flashcard/study/<set_id>/<flashcard_id>', methods=['POST'])
+def study_flashcard(flashcard_id, time, correct):
+    email = google_oauth2_validate(request.headers['authorization'])
+    if not email:
+        abort(401, description="Token could not be linked to any email.")
+    # Perform calculations to calculate the next review day for this specific flashcard_id
     pass
 
-@app.route('/api/flashcard/delete/<set_id>', methods=['POST'])
-def delete_all_flashcards(set_id):
-    json = request.json
-    token = request.headers['authorization']
-    email = google_oauth2_validate(token)
+# All the flashcards that need to be studied today
+@app.route('/api/flashcard/today/<set_id>', methods=['POST'])
+def today_flashcard(flashcard_id):
+    email = google_oauth2_validate(request.headers['authorization'])
     if not email:
-        abort(401)
+        abort(401, description="Token could not be linked to any email.")
+    # return array of cards that need to be studied today
+    pass
+
+# Delete all flashcards within a set
+@app.route('/api/flashcard/delete/<set_id>', methods=['DELETE'])
+def delete_all_flashcards(set_id):
+    email = google_oauth2_validate(request.headers['authorization'])
+    if not email:
+        abort(401, description="Token could not be linked to any email.")
+    json = request.json
+    set = db_delete_all_flashcards(set_id)
+    if "error" in set:
+        abort(404, description=set["error"])
     db_delete_all_flashcards(set_id)
     pass
 
@@ -205,25 +268,24 @@ def delete_all_flashcards(set_id):
 #     return send_from_directory('/html', path)\
 
 #Google OAuth2
-app.secret_key = "supersekrit"  # Replace this with your own secret!
-google_blueprint = make_google_blueprint(
-    client_id = "591191830884-iesl69sb9n8hukk9jldkhjjbdmgf2hpi.apps.googleusercontent.com",
-    client_secret = "DwwVbC_7zBSHLB-_coC0bHbo",
-    scope= [
-        "https://www.googleapis.com/auth/plus.me",
-        "https://www.googleapis.com/auth/userinfo.email",
-    ]
-)
-app.register_blueprint(google_blueprint, url_prefix="/google_login")
+# app.secret_key = "DwwVbC_7zBSHLB-_coC0bHbo"  
+# google_blueprint = make_google_blueprint(
+#     client_id = secret.google_client_id,
+#     client_secret = secret.google_client_secret,
+#     scope= [
+#         "https://www.googleapis.com/auth/plus.me",
+#         "https://www.googleapis.com/auth/userinfo.email",
+#     ]
+# )
+# app.register_blueprint(google_blueprint, url_prefix="/google_login")
 
-@app.route("/google")
+# @app.route("/google")
 # def google_index():
 #     if not google.authorized:
 #         return redirect(url_for("google.login"))
 #     resp = google.get("/oauth2/v2/userinfo")
 #     if resp.ok:
-#         resp_json = resp.json()
-#         return 'You are {email} on Google'.format(email=resp_json["email"])
+#         return '<h1>You are {email} on Google'.format(email=resp_.json()["email"])
 #     else:
 #         return "Request failed!"
 
@@ -233,12 +295,6 @@ def google_oauth2_validate(access_token):
             params={'access_token': access_token})
     response = r.json()
     return response.email
-    
-    
-    
-# @app.route("/validate")
-# def update_user(user_id):
-
     
 # @app.route("/google/logout")
 # def google_logout():
@@ -252,4 +308,3 @@ def google_oauth2_validate(access_token):
 #     logout_user()        # Delete Flask-Login's session cookie
 #     del google_blueprint.token  # Delete OAuth token from storage
 #     return redirect(homepage) # redirect to after user has successfully logged in
-    
