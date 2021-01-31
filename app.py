@@ -81,7 +81,6 @@ def delete_user():
     else:
         return user
 
-
 # == SETS ==
 # GET /api/sets/get/<setid>
 # Gets a set by its ID

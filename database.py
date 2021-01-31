@@ -80,7 +80,7 @@ For users, sets, and cards, there's both a update_field and update_{object} (ex:
 '''
 
 def db_update_user_field(user_id, field, newValue):
-    if not "error" in user_id: d
+    if not "error" in user_id:
         query = {"_id": user_id}
         userUpdated = users.update(query, {"$set": {field: newValue}})
         data = {"error": f"User {user_id} wasn't updated"} if userUpdated['nModified'] <= 0 else {"success": f"User {user_id} was updated"}
