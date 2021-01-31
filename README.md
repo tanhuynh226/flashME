@@ -3,21 +3,16 @@
 ## Welcome to Flash.ME!
 
 ### Inspiration
-Studying for memorization-heavy exams, such as medical school and law school exams, can be incredibly taxing on students. While Anki is often the go-to study software endorsed by many productivity youtubers and medical school influencers, we found personally that it lacked visuals. Spending too long on a monotone UI can be even more taxing along with the weight of studying tons of information. While Quizlet is another strong choice, it lacks the crucial spaced-repetition algorithm of Anki to boost effective studying. Thus, we wanted to create something that combines the best of both worlds.
+Studying for memorization-heavy exams, such as medical school and law school exams, can be incredibly taxing on students. While Anki is often the go-to study software endorsed by many productivity youtubers and medical school influencers, we found personally that it lacked visuals. Spending too long on a monotone UI can be even more taxing along with the weight of studying tons of information. While Quizlet is another strong choice, it lacks the crucial spaced-repetition algorithm of Anki to boost effective studying. We wanted to create something that combines the best of both worlds.
 
 ### What it does
-This project aims to implement evidenced-based study strategies such as active recall and spaced repetition in a flashcard website while providing users with a fresh and intuitive UI. 
-
-[comment]: <> (Users are able to sign in using OAuth and create flashcard sets.)
-[comment]: <> (While studying, the program is actively analyzing the quality of their response with each flashcard (quickness, whether it's right or wrong))
-[comment]: <> (e.g. low quality answers means the flashcard will appear again sooner)
+This project aims to implement evidenced-based study strategies such as active recall and spaced repetition in a flashcard website while providing users with a fresh and intuitive UI. Users are able to sign in using OAuth and create flashcard sets. While studying, the program is actively analyzing the quality of their response with each flashcard, for example, how quick a user responds or how accurate it is. For example, low accuracy answers means the flashcard will appear again in a sooner study session.
 
 Active Recall
 : Testing yourself on information to improve it's strength in your long term memory
 
 Spaced Repetition
 : Spreading your study sessions over a period of time to combat the "forgetting curve"
-[comment]: <> (You should expand more on how the algorithm works and talk about how there's a lot of factors that it takes into account here when determining the next time that you review the flash card. I know you did it in)
 
 ### How we built it
 
@@ -25,12 +20,12 @@ We used Python and imported a spaced repetition algorithm module called SuperMem
 
 User information, flashcard sets, and the flashcards were stored on a MongoDB database that can send or retrieve data at any time.
 
-On the front-end, we used vue.js to build a responsive single-page website and Figma to design the user interace. 
+On the front-end, we used vue.js to build a responsive single-page website while using a combination of Sketch and Figma to design the user interace. 
 
 
-* webpage
+
 * database and hosting
-* user interface
+
 
 ### What we learned
 * First time working with database storage and server hosting
@@ -50,29 +45,30 @@ On the front-end, we used vue.js to build a responsive single-page website and F
 * Authorization error when trying to log on to OAuth from different IPs
 * Unfamiliarity with frameworks
 * Passing from front-end to back-end and vice versa
+* connecting database to frontend 
 
 ### Accomplishments we're proud of
 * The design turned out amazing. We're really happy with how it looks!
-* 
-
+* Lots of growth as software engineers in a short amount of time
+* Bringing a product to the market thats applicable and useful
 
 ### What's next for Flash.ME
 * Text to speech function
 * Image support
 * Ability to undo and override misclicks
+* Improve precision by accounting for time of day
 * Make project name more G rated
-* Improve precision to handle time of day
 
 ### Built with:
 * Back-end: Python
 * Front-end: JavaScript (vue.js?)
-* Figma
 * MongoDB
 * Postman
+* Figma
 * Heroku
 * ngrok
 
-#### The team: ####
+#### The team:
 * Pranav Grover
 * Tan Huynh
 * Christopher Linscott

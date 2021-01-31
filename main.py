@@ -61,12 +61,15 @@ def main():
     # db_delete_user(userid)
     # print("HIT3:", db_get_user(userid))
     # print("HIT3:", db_get_flashcard(flashcard))
-    new_user = db_create_user("Chris", "Chris is cool", [], "christopherlinscott@gmail.com")
-    new_set = db_create_set(new_user, "Set 1", "A cool set", [])
-    new_set2 = db_create_set(new_user, "Set 2", "Doggo", "Doggo")
+    new_user = db_create_user("Chris", "Chris is cool", [], "dnsfjkasnfk@gmail.com")
+    print(new_user)
+    new_set = db_create_set(new_user,"Set 1", "A cool set", [])
     new_flashcard1 = db_create_flashcard(new_set, "What is the capital of Spain?", "Madrid")
     new_flashcard2 = db_create_flashcard(new_set, "What is the capital of America?", "Washington, D.C.")
-    new_flashcard3 = db_create_flashcard(new_set, "What is the capital of Thailand?", "Bangkok")
+    new_set2 = db_create_set(new_user, "Set 2", "Doggo", [])
+    new_flashcard3 = db_create_flashcard(new_set2, "What is the capital of Thailand?", "Bangkok")
+    new_flashcard3 = db_create_flashcard(new_set2, "What is the capital of Japan?", "Tokyo")
+    new_flashcard3 = db_create_flashcard(new_set2, "What is the capital of Russia?", "Moscow")
     # pprint.pprint(db_get_set(new_set))
     # print(db_get_flashcards_of_set(new_set))
     # pprint.pprint(db_get_sets_of_user(new_user))
@@ -80,13 +83,13 @@ def main():
         "set_name": "Bowen's Set",
         "set_desc": "A set about bowen's weird facts"
     }
+    
     #pprint.pprint(db_get_flashcard(new_flashcard1))
-    print(db_study_flashcard(new_flashcard1, 10, True))
     # print(db_delete_user("60166c98f5799144781f1bd0"))
-    # pprint.pprint(db_delete_set(new_user, new_set))
+    pprint.pprint(db_delete_set(new_user, new_set))
     # print(new_user)
-    # print("HIT:", db_update_set(new_set2, newSet))
-    # pprint.pprint(db_delete_all_sets(new_user))
+    print("HIT:", db_update_set(new_set2, newSet))
+    pprint.pprint(db_delete_all_sets(new_user))
     # print(num_mod)
     # pprint.pprint(db_get_sets_of_user("601669b391d42a507b7c42a0"))
     

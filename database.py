@@ -39,16 +39,14 @@ flashcards = db.flashcards
 #User Methods
 
 def db_get_user(user_id):
-    print("USer:", type(user_id))
-    myquery = { "_id": ObjectId(user_id) }
+    myquery = { "_id": user_id }
     foundUsers = users.find(myquery)
     user = None if foundUsers.explain()['executionStats']['nReturned'] <= 0 else foundUsers[0]
     user_data = {}
     if not user == None:
-        print("ID:", type(str(user['_id'])))
         user_data = user
-        user_data['_id'] = str(user['_id'])
-        print("ID:", type(user_id))
+        print(user_id)
+        print("HIT HERE:", db_get_sets_of_user(user_id))
         user_data['flashcard_sets'] = db_get_sets_of_user(user_id)
     else:
         user_data = {
@@ -57,14 +55,21 @@ def db_get_user(user_id):
     return user_data
 
 def db_create_user(user_name, user_bio, user_flashcards, user_email):
-    new_user = {
-        "user_name": user_name,
-        "user_bio": user_bio,
-        "flashcard_sets": user_flashcards,
-        "user_email": user_email
-    }
-    userid = users.insert(new_user) #created from mongoDB, may need to be changed with OAuth
-    return userid
+    query = {"_id": user_email, "user_name": user_name}
+    duplicateUsers = users.find(query)
+    new_user_data = {"error": "User already has this username or email."} if duplicateUsers.explain()['executionStats']['nReturned'] > 0 else {}
+    if not "error" in new_user_data:
+        new_user = {
+            "user_name": user_name,
+            "user_bio": user_bio,
+            "flashcard_sets": user_flashcards,
+            "_id": user_email
+        }
+        #created from mongoDB, may need to be changed with OAuth
+        userid = users.insert(new_user)
+        return user_email
+    else:
+        return new_user_data
 
 
 '''
@@ -77,22 +82,27 @@ For users, sets, and cards, there's both a update_field and update_{object} (ex:
 '''
 
 def db_update_user_field(user_id, field, newValue):
-    query = {"_id": ObjectId(user_id)}
+    print(user_id)
+    query = {"_id": user_id}
+    print(field, newValue)
     userUpdated = users.update(query, {"$set": {field: newValue}})
     data = {"error": f"User {user_id} wasn't updated"} if userUpdated['nModified'] <= 0 else {"success": f"User {user_id} was updated"}
+    print(data)
+    print(db_get_user(user_id))
     return data
 
 def db_update_user(user_id, newUser):
-    query = {"_id": ObjectId(user_id)}
+    query = {"_id": user_id}
     userUpdated = users.update(query, {"$set": newUser})
     if(userUpdated['nModified'] > 0):
+        print(user_id + "has been updated with", newUser)
         return {"success": "User " + user_id + " has been updated"}
     else:
         return {"error": "User "+ user_id + " could not be updated."}
 
 
 def db_delete_user(user_id):
-    myquery = { "_id": ObjectId(user_id) }
+    myquery = { "_id": user_id }
     deletedUser = users.find_one_and_delete(myquery)
     data = {"error": f"User {user_id} could not be deleted."} if deletedUser == None else {"success": f"User {str(deletedUser['_id'])} was deleted."}
     if not "error" in data: 
@@ -101,25 +111,31 @@ def db_delete_user(user_id):
 
 #flashcard_set Methods
 def db_get_set(set_id):
-    myquery = { "_id": ObjectId(set_id) }
-    foundSets = sets.find(myquery)
-    set = None if foundSets.explain()['executionStats']['nReturned'] <= 0 else foundSets[0]
-    if not set == None:
-        cards = db_get_flashcards_of_set(set_id)
-        set_data = {
-            "title": set["set_name"],
-            "description": set["set_desc"],
-            "cards": cards,
-            "id": str(set["_id"]), #Object id -> str
-        }
+    if not "error" in set_id:
+        print("FFDFNKS", set_id) 
+        myquery = { "_id": ObjectId(set_id) }
+        foundSets = sets.find(myquery)
+        set = None if foundSets.explain()['executionStats']['nReturned'] <= 0 else foundSets[0]
+        if not set == None:
+            cards = db_get_flashcards_of_set(set_id)
+            set_data = {
+                "title": set["set_name"],
+                "description": set["set_desc"],
+                "cards": cards,
+                "id": str(set["_id"]), #Object id -> str
+            }
+        else:
+            set_data = {
+                "error": "No set found."
+            }
+        return set_data
     else:
-        set_data = {
-            "error": "No set found."
-        }
-    return set_data
+        return {"error": "Set_ID invalid."}
+
+    
 
 def db_get_sets_of_user(user_id):
-    myquery = { "user_id": ObjectId(user_id) } 
+    myquery = { "user_email": user_id } 
     found_sets = sets.find(myquery)
     numReturned = found_sets.explain()['executionStats']['nReturned']
     sets_in_users = []
@@ -128,21 +144,27 @@ def db_get_sets_of_user(user_id):
     for user_set in sets_in_users:
         user_set["_id"] = str(user_set["_id"])
         # user_set["user_id"] = str(user_set["user_id"])
-        del user_set["user_id"]
+    pprint(sets_in_users)
     return sets_in_users
 
-def db_create_set(user_id, set_name, description, cards):
+def db_create_set(user_email, set_name, description, cards):
     new_set = {
-        "user_id": user_id,
+        "user_email": user_email,
         "set_name": set_name,
         "set_desc": description,
         "cards": cards
     }
-    set_id = sets.insert(new_set)
-    user_sets = db_get_user(user_id)['flashcard_sets']
-    user_sets.append((set_id))
-    db_update_user_field(user_id, "flashcard_sets", user_sets)
-    return set_id  
+    user = db_get_user(user_email)
+    if not "error" in user:
+        newuser = user
+        set_id = sets.insert(new_set)
+        newuser_sets = user["flashcard_sets"]
+        newuser_sets.append(set_id)
+        newuser["flashcard_sets"] = newuser_sets
+        db_update_user(user_email, newuser)
+        return set_id 
+    else:
+        return {"error": "Could not make set."} 
 
 def db_update_set_field(set_id, field, newValue):
     query = {"_id": ObjectId(set_id)}
@@ -154,24 +176,24 @@ def db_update_set(set_id, newSet):
     query = {"_id": ObjectId(set_id)}
     setUpdated = sets.update(query, {"$set": newSet})
     data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
+    
     return data
 
 
 def db_delete_set(user_id, set_id):
     # delete in sets collection
     user_sets = db_get_user(user_id)
+    if "error" in user_sets:
+        return {"error": f"No set was deleted."}
     matching_sets = [set for set in user_sets['flashcard_sets'] if str(set["_id"]) == str(set_id)]
     if len(matching_sets) > 0:
         query = {"_id": ObjectId(set_id)}
         set = sets.remove(query)
-        print(set['n'])
         if set['n'] > 0:
             flashcards_in_set = db_get_flashcards_of_set(set_id)
-            print("DMFDKFMSDFS", flashcards_in_set)
             for flashcard in flashcards_in_set:
                 db_delete_flashcard(set_id, flashcard["_id"])
             if(len(user_sets) > 0):
-                pprint(user_sets["flashcard_sets"])
                 keep_sets = [set for set in user_sets['flashcard_sets'] if str(set['_id']) != str(set_id)]
                 db_update_user_field(user_id, "flashcard_sets", keep_sets)
             return {"success": f"Set {set_id} was deleted from user {user_id}"}
@@ -187,13 +209,9 @@ def db_delete_set(user_id, set_id):
 def db_delete_all_sets(user_id):
     # deletes all sets belonging to that user_id
     user_sets = db_get_sets_of_user(user_id)
-    pprint(user_sets)
-    query = {"_id": ObjectId(user_id)}
-    print(sets.remove(query))
+    query = {"_id": user_id}
      # deletes all flashcards underneath said sets (set_id)
-    pprint(user_sets)
     for set in user_sets:
-        print(set['_id'])
         db_delete_all_flashcards(set['_id']) # but don't return {"success": f"Set {set_id} was deleted from user {user_id}"} for every set deleted
     # clear user flashcard_sets
     db_update_user_field(user_id, "flashcard_sets", [])
@@ -237,34 +255,36 @@ def db_create_flashcard(set_id, front, back):
         "back": back,
         "learning_history": superMem.json()
     }
-    flashcard_id = flashcards.insert(new_flashcard)
-    set_cards = db_get_set(set_id)['cards']
-    set_cards.append(flashcard_id)
-    db_update_set_field(set_id, "cards", set_cards)
-    return flashcard_id
+    if not "error" in set_id:
+        flashcard_id = flashcards.insert(new_flashcard)
+        set_cards = db_get_set(set_id)['cards']
+        set_cards.append(flashcard_id)
+        db_update_set_field(set_id, "cards", set_cards)
+        return flashcard_id
+    else:
+        return {"error": "Could not create flashcard."}
 
 def db_update_flashcard_field(flashcard_id, field, newValue):
     query = {"_id": ObjectId(flashcard_id)}
     updatedFlashcard = flashcards.update(query, {"$set": {field: newValue}})
-    print(updatedFlashcard)
     return updatedFlashcard
     pass
 
 def db_update_flashcard(flashcard_id, newFlashcard):
     query = {"_id": ObjectId(flashcard_id)}
     updatedFlashcard = flashcards.update(query, {"$set": newFlashcard})
-    print(updatedFlashcard)
     return updatedFlashcard
     pass
 
 def db_delete_flashcard(set_id, flashcard_id):
     # takes in set_id
     set = db_get_set(set_id)
+    print("SET IS:", set)
     # deletes flashcard_id belonging to that set_id
     query = {"_id": ObjectId(flashcard_id)}
     flashcards.delete_one(query)
     # delete from set object
-    print(set)
+    
     if not "error" in set:
         set_cards = set['cards']
         set_cards.remove(flashcard_id)
@@ -274,7 +294,6 @@ def db_delete_flashcard(set_id, flashcard_id):
 def db_delete_all_flashcards(set_id):
     # takes in set_id 
     set = db_get_set(set_id)
-    print(set)
     # deletes all flashcards belonging to that set_id
     query = {"set_id": ObjectId(set_id)}
     flashcards.remove(query)
@@ -288,10 +307,10 @@ def db_study_flashcard(flashcard_id, time, correct):
         return {"error": "No flashcard found."}
     else:
         learning_history = flashcard_from_db["learning_history"]
-        print(learning_history)
         new_flashcard = flashcard(learning_history)
         new_flashcard.updateReviewDate(time, correct)
-        return new_flashcard["learning_history"]
+        db_update_flashcard_field(flashcard_id, "learning_history", new_flashcard.learning_history)
+        return new_flashcard.learning_history
 
     # take data -> create Flashcard (using flashcard class)
     # get next_review_day from flashcard.get_next_review_day()

@@ -14,19 +14,20 @@ class flashcard(object):
     def update_learning_history(self):
         smTwo = first_review(3, date.today())
         current_learning_history = json.loads(self.learning_history)
-        print(date.today())
+        # print(date.today())
         correct_date = date.fromisoformat(current_learning_history["review_date"])
         # correct_date = current_learning_history["review_date"].replace("-", "/")
         # correct_date = datetime.strptime(current_learning_history["review_date"], "%y/%m/%d")
         smTwo = modify(smTwo, current_learning_history["quality"], current_learning_history["easiness"], current_learning_history["interval"], current_learning_history["repetitions"], correct_date) #input with the dbData values (easiness, history, etc. )
-        print(smTwo.quality)
+        # print(smTwo.quality)
         #retrieve data, make a new SMTwo instance, and calculate new review date, etc.
 
     def calculate_next_review_day(self, newQuality, new_review_date=date.today()):
         smTwo = SMTwo()
         current_learning_history = json.loads(self.learning_history)
-        smTwo.calc(newQuality, self.learning_historyeasiness, self.learning_history.interval, self.learning_history.repetitions, new_review_date)
+        smTwo.calc(newQuality, current_learning_history["easiness"], current_learning_history["interval"], current_learning_history["repetitions"], new_review_date)
         self.learning_history = smTwo.json()
+        # print("HITLKDFMLDSF:", self.learning_history)
         return smTwo.review_date
 
     def send_to_database(self):

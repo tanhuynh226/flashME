@@ -14,11 +14,11 @@ app = Flask(__name__) #Change name
 # GET /api/user/get/<userid>
 # Gets a user by their ID
 @app.route('/api/user/get/me', methods=['GET'])
-def get_user(user_id):
+def get_user():
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
-    user = db_get_user(user_id)
+    user = db_get_user(email)
     print(user)
     if "error" in user:
         abort(404, description=user["error"])
@@ -28,22 +28,23 @@ def get_user(user_id):
 # GET /api/user/sets/<userid>
 # Gets all sets that a user has, and their data
 @app.route('/api/user/sets/me', methods=['GET'])
-def get_all_sets(user_id):
+def get_all_sets():
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
-    sets = db_get_sets_of_user(user_id)
+    sets = db_get_sets_of_user(email)
     return json.dumps(sets)
 
 # POST /api/user/create/<userid>
 # Create a user with their ID
 
 @app.route('/api/user/create/me', methods=['POST'])
-def create_user(user_id):
+def create_user():
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
-    pass
+    else:
+
     # find that user in the database
     # send that data back to the web browser (client)
 
@@ -131,12 +132,12 @@ request.json (this is of type Dict)
 # POST /api/sets/create/me
 # Create a set with that ID (it will have all the cards)
 @app.route('/api/set/create/me', methods=['POST'])
-def create_set(user_id):
+def create_set():
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
     json = request.json
-    db_create_set(user_id, json.name, json.description, json.cards)
+    db_create_set(email, json.name, json.description, json.cards)
 
 # POST /api/sets/delete/<setid>
 # Create a set with that ID (it will have all the cards)
@@ -228,13 +229,33 @@ def update_flashcard(set_id, flashcard_id):
 
 # POST /api/flashcard/<studyid>
 # Update a flashcard with the study results
+'''
+    Needed info:
+    - Time --> seconds to complete problem
+    - Correct --> whether it's correct
+    - ID --> flashcard ID
 
+    Will return: (String Json, need to parse) 
+    - quality --> quality calculated based on time and correctness
+    - easiness --> easiness of retrieving answer?
+    - repetitions --> number of times repeated
+    - review_date --> next review date
+    - interval --> how many days til next review date
+    
+    NOTE: all values with prefix prev_ are the previous value before calcualti
+    {"quality": 4, "prev_easiness": 2.36, 
+    "prev_interval": 14, "prev_repetitions": 4, 
+    "prev_review_date": "2021-01-31", 
+    "easiness": 2.36, "interval": 33, 
+    "repetitions": 5, "review_date": "2021-03-05"}
+'''
 # Calculations after user inputs correct or wrong
 @app.route('/api/flashcard/study/<set_id>/<flashcard_id>', methods=['POST'])
 def study_flashcard(flashcard_id, time, correct):
     email = google_oauth2_validate(request.headers['authorization'])
     if not email:
         abort(401, description="Token could not be linked to any email.")
+    db_study_flashcard(flashcard_id, time, correct)
     # Perform calculations to calculate the next review day for this specific flashcard_id
     pass
 
@@ -268,7 +289,7 @@ def delete_all_flashcards(set_id):
 #     return send_from_directory('/html', path)\
 
 #Google OAuth2
-# app.secret_key = "DwwVbC_7zBSHLB-_coC0bHbo"  
+# app.secret_key = secret.google_client_secret  
 # google_blueprint = make_google_blueprint(
 #     client_id = secret.google_client_id,
 #     client_secret = secret.google_client_secret,
@@ -294,7 +315,7 @@ def google_oauth2_validate(access_token):
             'https://www.googleapis.com/oauth2/v3/userinfo',
             params={'access_token': access_token})
     response = r.json()
-    return response.email
+    return response['email']
     
 # @app.route("/google/logout")
 # def google_logout():
