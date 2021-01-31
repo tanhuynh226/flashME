@@ -1,5 +1,8 @@
+
+from database import *
 import random
 from flashcard import *
+from flashcard_set import *
 from user import *
 
 def main():
@@ -20,7 +23,17 @@ def main():
         for item in currentSet.flashcards:
             flashCardSet.flashcards[item].print()
     user1.get_flashcards_to_do(2)
+    flashcard1.calculate_next_review_day(5)
+    flashcard2.calculate_next_review_day(0)
+    flashcard1.send_to_database()
     user1.get_review_dates(2)
+    print(db_get_user("60160d48c81590872de83670"))
+    print(db_get_set("60161419061e965e6ca7c645"))
+
+
+    # db_delete_user("60160b96606dc4f598738570")
+    # db_create_set(1, "Cats", "Cats are sometimes it.", dict())
+
 
     
 

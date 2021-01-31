@@ -20,6 +20,7 @@ This project aims to combine the spaced repetition algorithm within Anki with th
 * Front-end: JavaScript
 * Firebase
 * Figma
+* MongoDB
 
 #### The team:
 * Pranav Grover

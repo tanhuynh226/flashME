@@ -7,17 +7,17 @@ def updateReviewDate(flashcard):
     #if correct button is pressed:
         end = time.time();
         if (end - time) > 10:
-            flashcard.review_date = flashcard.modify(card_id, 3)
+            flashcard.review_date = flashcard.calculate_next_review_day(3)
         elif (end - time) > 5:
-            flashcard.review_date = flashcard.quality(4)
+            flashcard.review_date = flashcard.calculate_next_review_day(4)
         elif (end - time) < 5:
-            flashcard.review_date = flashcard.quality(5)
+            flashcard.review_date = flashcard.calculate_next_review_day(5)
     #else if wrong button is pressed:
         end = time.time();
         if (end - time) > 5:
-            flashcard.review_date = flashcard.quality(1)
+            flashcard.review_date = flashcard.calculate_next_review_day(1)
         elif (end - time) < 5:
-            flashcard.review_date = flashcard.quality(2)
+            flashcard.review_date = flashcard.calculate_next_review_day(2)
     #else if didn't know button is pressed:
-        flashcard.review_date = flashcard.quality(0)
+        flashcard.review_date = flashcard.calculate_next_review_day(0)
 
