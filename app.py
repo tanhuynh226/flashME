@@ -48,18 +48,6 @@ def create_user():
     # find that user in the database
     # send that data back to the web browser (client)
 
-'''
-POST REQUEST --> UPDATE USER
-INFO NEEDED:
-type: dict or {} (in response body)?
-{
-    "user_name": new_username,
-    "user_bio": new_username_bio,
-    "flashcard_sets": new_sets,
-    "user_email": new_user_email,
-}
-'''
-
 
 # POST /api/user/update/<userid>
 # Update a user with their ID

@@ -72,16 +72,16 @@ def main():
     # pprint.pprint(db_get_set(new_set))
     # print(db_get_flashcards_of_set(new_set))
     # pprint.pprint(db_get_sets_of_user(new_user))
-    newUser = {
-        "user_name": "Chris",
-        "user_bio": "The girl bowen is in love with",
-        "flashcard_sets": [],
-        "user_token": "3432489238u9234832"
-    }
-    newSet = {
-        "set_name": "Bowen's Set",
-        "set_desc": "A set about bowen's weird facts"
-    }
+    # newUser = {
+    #     "user_name": "Chris",
+    #     "user_bio": "The girl bowen is in love with",
+    #     "flashcard_sets": [],
+    #     "user_token": "3432489238u9234832"
+    # }
+    # newSet = {
+    #     "set_name": "Bowen's Set",
+    #     "set_desc": "A set about bowen's weird facts"
+    # }
 
     # pprint.pprint(db_get_sets_of_user("601669b391d42a507b7c42a0"))
     
