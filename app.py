@@ -95,6 +95,10 @@ request.json (this is of type Dict)
 @app.route('/api/set/create/<user_id>', methods=['POST'])
 def create_set(user_id):
     json = request.json
+    token = request.headers['authorization']
+    email = google_oauth2_validate(token)
+    if not email:
+        abort(401)
     db_create_set(user_id, json.name, json.description, json.cards)
 
 # POST /api/sets/delete/<setid>
@@ -102,6 +106,10 @@ def create_set(user_id):
 @app.route('/api/set/delete/<user_id>/<set_id>', methods=['POST'])
 def delete_set(user_id, set_id):
     json = request.json
+    token = request.headers['authorization']
+    email = google_oauth2_validate(token)
+    if not email:
+        abort(401)
     db_delete_set(set_id)
 
 
@@ -110,6 +118,10 @@ def delete_set(user_id, set_id):
 @app.route('/api/set/update/<user_id>/<set_id>', methods=['POST'])
 def update_set(user_id, set_id):
     json = request.json
+    token = request.headers['authorization']
+    email = google_oauth2_validate(token)
+    if not email:
+        abort(401)
     db_update_set(user_id, json.name, json.description, json.cards)
 
 
@@ -118,6 +130,10 @@ def update_set(user_id, set_id):
 @app.route('/api/flashcard/get/<flashcard_id>', methods=['GET'])
 def get_flashcard(flashcard_id):
     flashcard = db_get_flashcard(flashcard_id)
+    token = request.headers['authorization']
+    email = google_oauth2_validate(token)
+    if not email:
+        abort(401)
     if not flashcard:
         abort(404)
     else:
@@ -132,6 +148,10 @@ def get_flashcard(flashcard_id):
 @app.route('/api/flashcard/create/<set_id>', methods=['POST'])
 def create_flashcard(set_id):
     json = request.json
+    token = request.headers['authorization']
+    email = google_oauth2_validate(token)
+    if not email:
+        abort(401)
     db_create_flashcard(set_id, json.front, json.back)
 # Create a flashcard with an ID
 
@@ -139,6 +159,10 @@ def create_flashcard(set_id):
 @app.route('/api/flashcard/delete/<set_id>/<flashcard_id>', methods=['POST'])
 def delete_flashcard(set_id, flashcard_id):
     json = request.json
+    token = request.headers['authorization']
+    email = google_oauth2_validate(token)
+    if not email:
+        abort(401)
     db_delete_flashcard(set_id, flashcard_id)
     pass
 
@@ -147,6 +171,10 @@ def delete_flashcard(set_id, flashcard_id):
 @app.route('/api/flashcard/update/<set_id>/<flashcard_id>', methods=['POST'])
 def update_flashcard(set_id, flashcard_id):
     json = request.json
+    token = request.headers['authorization']
+    email = google_oauth2_validate(token)
+    if not email:
+        abort(401)
     db_update_flashcard(set_id, flashcard_id)
     pass
 # Update a flashcard with an ID
@@ -162,6 +190,10 @@ def study_flashcard(flashcard_id):
 @app.route('/api/flashcard/delete/<set_id>', methods=['POST'])
 def delete_all_flashcards(set_id):
     json = request.json
+    token = request.headers['authorization']
+    email = google_oauth2_validate(token)
+    if not email:
+        abort(401)
     db_delete_all_flashcards(set_id)
     pass
 
@@ -185,15 +217,15 @@ google_blueprint = make_google_blueprint(
 app.register_blueprint(google_blueprint, url_prefix="/google_login")
 
 @app.route("/google")
-def google_index():
-    if not google.authorized:
-        return redirect(url_for("google.login"))
-    resp = google.get("/oauth2/v2/userinfo")
-    if resp.ok:
-        resp_json = resp.json()
-        return 'You are {email} on Google'.format(email=resp_json["email"])
-    else:
-        return "Request failed!"
+# def google_index():
+#     if not google.authorized:
+#         return redirect(url_for("google.login"))
+#     resp = google.get("/oauth2/v2/userinfo")
+#     if resp.ok:
+#         resp_json = resp.json()
+#         return 'You are {email} on Google'.format(email=resp_json["email"])
+#     else:
+#         return "Request failed!"
 
 def google_oauth2_validate(access_token):
     r = requests.get(
