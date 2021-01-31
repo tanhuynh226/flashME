@@ -1,7 +1,10 @@
 # from flashME.database import db_create_set, db_get_set
 from flask import Flask, request, redirect, url_for, render_template, session, jsonify, abort
 from flask.helpers import send_from_directory
+from flask_dance.contrib.google import make_google_blueprint, google
 from database import *
+import requests
+# from flask_login import logout_user
 import json
 
 app = Flask(__name__) #Change name
@@ -22,9 +25,9 @@ def get_user(user_id):
 # Gets all sets that a user has, and their data
 @app.route('/api/user/sets/<user_id>', methods=['GET'])
 def user_sets(user_id):
-    user = db_user_sets(user_id)
+    user = db_get_set(user_id) 
     if not user:
-        abort(404
+        abort(404)
     else:
         return jsonify([db_get_set(set_id) for set_id in user.sets])
 
@@ -49,7 +52,7 @@ def update_user():
 # POST /api/user/delete/<userid>
 # Update a user with their ID
 @app.route('/api/user/delete/<user_id>', methods=['POST'])
-def delete_user():
+def delete_user(user_id):
     user = db_delete_user(user_id)
     if not user:
         abort(404)
@@ -71,9 +74,12 @@ def get_set(set_id):
 '''
 request.json (this is of type Dict)
 {
-    name: String,
+    username: String,
     description: String,
     id: String (we don't have to use this)
+    sets: [
+        ...
+    ]
     cards: [
         {
             front: String
@@ -86,14 +92,14 @@ request.json (this is of type Dict)
 
 # POST /api/sets/create/<user_id>
 # Create a set with that ID (it will have all the cards)
-@app.route('/api/sets/create/<user_id>', methods=['POST'])
+@app.route('/api/set/create/<user_id>', methods=['POST'])
 def create_set(user_id):
     json = request.json
     db_create_set(user_id, json.name, json.description, json.cards)
 
 # POST /api/sets/delete/<setid>
 # Create a set with that ID (it will have all the cards)
-@app.route('/api/sets/delete/<user_id>/<set_id>', methods=['POST'])
+@app.route('/api/set/delete/<user_id>/<set_id>', methods=['POST'])
 def delete_set(user_id, set_id):
     json = request.json
     db_delete_set(set_id)
@@ -101,14 +107,11 @@ def delete_set(user_id, set_id):
 
 # POST /api/sets/update/<userid>
 # Update a set with that ID
-@app.route('/api/sets/update/<user_id>/<set_id>', methods=['POST'])
+@app.route('/api/set/update/<user_id>/<set_id>', methods=['POST'])
 def update_set(user_id, set_id):
     json = request.json
     db_update_set(user_id, json.name, json.description, json.cards)
 
-@app.route('/api/sets/delete/<user_id>', methods=['POST'])
-def delete_all_sets(user_id):
-    pass
 
 # == FLASHCARDS ==
 # GET /api/flashcard/get/<flashcardid>
@@ -135,23 +138,31 @@ def create_flashcard(set_id):
 # POST /api/flashcard/delete/<flashcardid>
 @app.route('/api/flashcard/delete/<set_id>/<flashcard_id>', methods=['POST'])
 def delete_flashcard(set_id, flashcard_id):
+    json = request.json
+    db_delete_flashcard(set_id, flashcard_id)
     pass
 
 # Create a flashcard with an ID
 # POST /api/flashcard/update/<flashcardid>
 @app.route('/api/flashcard/update/<set_id>/<flashcard_id>', methods=['POST'])
-def update_flashcard(flashcard_id):
+def update_flashcard(set_id, flashcard_id):
+    json = request.json
+    db_update_flashcard(set_id, flashcard_id)
     pass
 # Update a flashcard with an ID
 
 # POST /api/flashcard/<studyid>
 # Update a flashcard with the study results
+
+# Calculations after user inputs correct or wrong
 @app.route('/api/flashcard/delete/<flashcard_id>/<set_id>', methods=['POST'])
 def study_flashcard(flashcard_id):
     pass
 
 @app.route('/api/flashcard/delete/<set_id>', methods=['POST'])
 def delete_all_flashcards(set_id):
+    json = request.json
+    db_delete_all_flashcards(set_id)
     pass
 
 #serving static html files
@@ -159,4 +170,54 @@ def delete_all_flashcards(set_id):
 
 # @app.route('html/<path:path>')
 # def send_html(path):
-#     return send_from_directory('/html', path)
+#     return send_from_directory('/html', path)\
+
+#Google OAuth2
+app.secret_key = "supersekrit"  # Replace this with your own secret!
+google_blueprint = make_google_blueprint(
+    client_id = "591191830884-iesl69sb9n8hukk9jldkhjjbdmgf2hpi.apps.googleusercontent.com",
+    client_secret = "DwwVbC_7zBSHLB-_coC0bHbo",
+    scope= [
+        "https://www.googleapis.com/auth/plus.me",
+        "https://www.googleapis.com/auth/userinfo.email",
+    ]
+)
+app.register_blueprint(google_blueprint, url_prefix="/google_login")
+
+@app.route("/google")
+def google_index():
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    resp = google.get("/oauth2/v2/userinfo")
+    if resp.ok:
+        resp_json = resp.json()
+        return 'You are {email} on Google'.format(email=resp_json["email"])
+    else:
+        return "Request failed!"
+
+def google_oauth2_validate(access_token):
+    r = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            params={'access_token': access_token})
+    response = r.json()
+    return response.email
+    
+    
+    
+# @app.route("/validate")
+# def update_user(user_id):
+
+    
+# @app.route("/google/logout")
+# def google_logout():
+#     token = google_blueprint.token["access_token"]
+#     resp = google.post(
+#         "https://accounts.google.com/o/oauth2/revoke",
+#         params={"token": token},
+#         headers={"Content-Type": "application/x-www-form-urlencoded"}
+#     )
+#     assert resp.ok, resp.text
+#     logout_user()        # Delete Flask-Login's session cookie
+#     del google_blueprint.token  # Delete OAuth token from storage
+#     return redirect(homepage) # redirect to after user has successfully logged in
+    

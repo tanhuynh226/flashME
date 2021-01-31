@@ -165,19 +165,6 @@ def get_google_provider_cfg():
 
 
 #Code for username and password
-from flask_mongoengine import MongoEngine, Document
 
-app = Flask(__name__)
-
-app.config['MONGODB_SETTINGS'] = {
-    'db': ' '''db_name''' ',
-    'host': 'mongob:// '''full db uri''' '
-}
-
-db = MongoEngine(app)
-app.config['SECRET_KEY'] = '<---YOUR_SECRET_FORM_KEY--->'
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'  
 
 

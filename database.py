@@ -136,8 +136,8 @@ def db_delete_flashcard(set_id, flashcard_id):
     # takes in set_id
     set = db_get_set(set_id)
     # deletes flashcard_id belonging to that set_id
-    query = {_id: ObjectId(flashcard)}
-    flashcards.delete_one(query)
+    myquery = {_id: ObjectId(flashcard_id)}
+    flashcards.delete_one(myquery)
     # delete from set object
     pass
 
