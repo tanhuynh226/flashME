@@ -253,7 +253,7 @@ def today_flashcard(set_id):
         abort(401, description="Token could not be linked to any email.")
     # return array of cards that need to be studied today
     return db_get_cards_to_study_today(set_id)
-    
+
 # Delete all flashcards within a set
 @app.route('/api/flashcard/delete/<set_id>', methods=['DELETE'])
 def delete_all_flashcards(set_id):

@@ -18,13 +18,8 @@ Spaced Repetition
 
 We used Python and imported a spaced repetition algorithm module called SuperMemo2 on the back-end. SuperMemo2 provided us various values to determine the "spacing" and "repetition" in our study sessions. The values "quality" and "easiness" help determine the strength of a user's knowledge of a certain flashcard based on answer similarity and response time. The values "repetition" and "interval" help determine the next time a user will come across the flashcard in their study sessions in order to calculate a "review_date".
 
-User information, flashcard sets, and the flashcards were stored on a MongoDB database that can send or retrieve data at any time.
+On the front-end, we used vue.js to build a responsive single-page website while using a combination of Sketch and Figma to design the user interace. User information, flashcard sets, and the flashcards were stored on a MongoDB database that can send or retrieve data at any time. We host our website on netlify.
 
-On the front-end, we used vue.js to build a responsive single-page website while using a combination of Sketch and Figma to design the user interace. 
-
-
-
-* database and hosting
 
 
 ### What we learned
