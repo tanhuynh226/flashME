@@ -41,12 +41,12 @@ def db_get_user(user_id):
     user = None if foundUsers.explain()['executionStats']['nReturned'] <= 0 else foundUsers[0]
     return user
 
-def db_create_user(user_name, user_bio, user_flashcards, user_token):
+def db_create_user(user_name, user_bio, user_flashcards, user_email):
     new_user = {
         "user_name": user_name,
         "user_bio": user_bio,
         "flashcard_sets": user_flashcards,
-        "user_token": user_token
+        "user_email": user_email
     }
     userid = users.insert(new_user) #created from mongoDB, may need to be changed with OAuth
     return userid
