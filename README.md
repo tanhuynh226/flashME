@@ -21,6 +21,7 @@ This project aims to combine the spaced repetition algorithm within Anki with th
 * Firebase
 * Figma
 * MongoDB
+* Postman
 
 #### The team:
 * Pranav Grover
