@@ -49,7 +49,6 @@ def create_user():
     # send that data back to the web browser (client)
 
 '''
-
 POST REQUEST --> UPDATE USER
 INFO NEEDED:
 type: dict or {} (in response body)?
@@ -59,7 +58,6 @@ type: dict or {} (in response body)?
     "flashcard_sets": new_sets,
     "user_email": new_user_email,
 }
-
 '''
 
 

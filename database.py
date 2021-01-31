@@ -167,17 +167,22 @@ def db_create_set(user_email, set_name, description, cards):
         return {"error": "Could not make set."} 
 
 def db_update_set_field(set_id, field, newValue):
-    query = {"_id": ObjectId(set_id)}
-    setUpdated = sets.update(query, {"$set": {field: newValue}})
-    data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
-    return data
+    if not "error" in set_id:
+        query = {"_id": ObjectId(set_id)}
+        setUpdated = sets.update(query, {"$set": {field: newValue}})
+        data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
+        return data
+    else:
+        return {"error": "Set_id invalid in updating set"}
 
 def db_update_set(set_id, newSet):
-    query = {"_id": ObjectId(set_id)}
-    setUpdated = sets.update(query, {"$set": newSet})
-    data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
-    
-    return data
+    if not "error" in set_id:
+        query = {"_id": ObjectId(set_id)}
+        setUpdated = sets.update(query, {"$set": newSet})
+        data = {"error": f"Set {set_id} wasn't updated"} if setUpdated['nModified'] <= 0 else {"success": f"Set {set_id} was updated"}
+        return data
+    else:
+        return {"error": "Set_id invalid in updating set"}
 
 
 def db_delete_set(user_id, set_id):
